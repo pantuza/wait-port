@@ -30,3 +30,6 @@
 
 # Debug files
 *.dSYM/
+
+# Project binary files
+/bin/wait-port
