@@ -1,7 +1,7 @@
 #
 #
 #
-# Makefile of wait-port project
+# Makefile template for C code
 #
 # Author: Gustavo Pantuza Coelho Pinto
 # Since: 24.03.2016
@@ -19,7 +19,9 @@ END_COLOR=\e[0m
 # Source code directory structure
 BINDIR := bin
 SRCDIR := src
+LOGDIR := log
 LIBDIR := lib
+TESTDIR := test
 
 
 # Source code file extension
@@ -31,13 +33,13 @@ CC := gcc
 
 
 # Defines the language standards for GCC
-STD := -std=gnu99
+STD := -std=gnu99 # See man gcc for more options
 
 # Protection for stack-smashing attack
 STACK := -fstack-protector-all -Wstack-protector
 
 # Specifies to GCC the required warnings
-WARNS := -Wall -Wextra -pedantic -pedantic
+WARNS := -Wall -Wextra -pedantic # -pedantic warns on language standards
 
 # Flags for compiling
 CFLAGS := -O3 $(STD) $(STACK) $(WARNS)
@@ -45,11 +47,22 @@ CFLAGS := -O3 $(STD) $(STACK) $(WARNS)
 # Debug options
 DEBUG := -g3 -DDEBUG=1
 
+# Dependency libraries
+LIBS := -lm # -I some/path/to/library
+
+# Test libraries
+TEST_LIBS := -l cmocka -L /usr/lib
+
 
 #
 # The binary file name
 #
-BINARY := wait-port
+BINARY := binary
+
+
+# Tests binary file
+TEST_BINARY := $(BINARY)_test_runner
+
 
 
 # %.o file names
@@ -83,12 +96,22 @@ valgrind:
 		--track-origins=yes \
 		--leak-check=full \
 		--leak-resolution=high \
-		--log-file=$@.log \
+		--log-file=$(LOGDIR)/$@.log \
 		$(BINDIR)/$(BINARY)
-	@echo -e "\nCheck the log file: $@.log\n"
+	@echo -e "\nCheck the log file: $(LOGDIR)/$@.log\n"
+
+
+# Compile tests and run the test binary
+tests:
+	@echo -en "$(BROWN)CC $(END_COLOR)";
+	$(CC) $(TESTDIR)/main.c -o $(BINDIR)/$(TEST_BINARY) $(DEBUG) $(CFLAGS) $(LIBS) $(TEST_LIBS)
+	@which ldconfig && ldconfig -C /tmp/ld.so.cache || true # caching the library linking
+	@echo -e "$(BROWN) Running tests: $(END_COLOR)";
+	./$(BINDIR)/$(TEST_BINARY)
 
 
 # Rule for cleaning the project
 clean:
 	@rm -rvf $(BINDIR)/*;
 	@rm -rvf $(LIBDIR)/*;
+	@rm -rvf $(LOGDIR)/*;
