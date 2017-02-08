@@ -13,6 +13,11 @@
  * ============================================================================
  */
 
+/* TODO: It will be necessary for each OS header files */
+#ifdef __linux__
+#elif __APPLE__
+#endif
+
 
 #include <stdlib.h>
 
